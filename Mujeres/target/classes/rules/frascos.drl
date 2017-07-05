@@ -1,0 +1,104 @@
+//created on: 31/01/2017
+//Isabel García Pérez A01331405
+package com.sample
+
+//list any import classes here.
+declare Frasco
+	color : String @key
+end 
+
+declare Toxico 
+	colorT : Frasco @key
+end 
+
+declare NoToxico
+	colorNT : Frasco @key
+end 
+
+declare UnoOtro1
+	frascoUno : Frasco @key
+	frascoDos : Frasco @key
+end 
+
+declare UnoSin1
+	frasco1 : Frasco @key
+	frasco2 : Frasco @key
+end 
+
+rule "Carga datos"
+    when
+        //conditions
+    then
+      	Frasco rojo = new Frasco("Rojo"); 
+      	insert(rojo); 
+      	Frasco violeta = new Frasco("Violeta"); 
+      	insert(violeta); 
+      	Frasco azul = new Frasco("Azul"); 
+      	insert(azul); 
+      	Frasco anaranjado = new Frasco("Anaranjado"); 
+      	insert(anaranjado); 
+      	Frasco amarillo = new Frasco("Amarillo"); 
+      	insert(amarillo); 
+      	Frasco verde = new Frasco("Verde"); 
+      	insert(verde); 
+      	
+      	UnoOtro1 uo = new UnoOtro1(violeta,azul);
+      	insert(uo); 
+      	uo = new UnoOtro1(rojo,amarillo);
+      	insert(uo); 
+      	uo = new UnoOtro1(azul,anaranjado); 
+      	insert(uo); 
+      	
+      	UnoSin1 us = new UnoSin1(violeta,amarillo); 
+      	insert(us); 
+      	us = new UnoSin1(rojo, anaranjado); 
+      	insert(us); 
+      	us = new UnoSin1( verde, azul); 
+      	insert(us); 
+      	
+      	NoToxico ntx = new NoToxico(rojo); 
+      	insert(ntx);
+end
+
+rule "No es rojo"
+	when 
+		$fr : Frasco(color.equals("Rojo"))
+		$con : UnoOtro1(frascoUno==$fr)
+	then 
+		insert(new Toxico($con.getFrascoDos()));
+		//System.out.println($con.getFrascoDos());
+end 
+query NoEsToxico(Frasco fr, Frasco $notoxico)
+	Toxico(colorT==fr) and 
+	UnoOtro1(frascoUno==fr, frascoDos==$notoxico) or UnoOtro1(frascoUno==$notoxico,frascoDos==fr)and 
+	UnoSin1(frasco1==fr, frasco2==$notoxico) or UnoSin1(frasco1==$notoxico, frasco2==fr)and 
+	not Toxico(colorT==$notoxico)
+end 
+query EsToxico(Frasco fr, Frasco $toxico)
+	NoToxico(colorNT==fr)and 
+	UnoOtro1(frascoUno==fr, frascoDos==$toxico) or UnoOtro1(frascoUno==$toxico, frascoDos==fr) and 
+	not NoToxico(colorNT==$toxico)
+end 
+rule "Test no toxico"
+	when 
+		$frasco : Frasco()
+		NoEsToxico($frasco, notoxico;)
+	then 
+		insert(new NoToxico(notoxico));
+end 
+rule "Test Toxico"
+	when 
+		$frascos : Frasco()
+		EsToxico($frascos, toxico;)
+	then 
+		insert(new Toxico(toxico));
+end 
+rule "Print Frascos"
+	when 
+		$to : Toxico()
+		$nt : NoToxico()
+	then 
+		System.out.println("Toxicos: " + $to.getColorT());
+		System.out.println("No Toxicos: "+ $nt.getColorNT());
+		System.out.println();
+end

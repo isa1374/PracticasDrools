@@ -1,0 +1,124 @@
+//created on: 31/01/2017
+package com.sample
+
+//list any import classes here.
+
+declare Mujer
+	nombre : String @key
+end
+
+declare Profesion
+	nombre : String @key
+end
+
+declare NoEs 
+	mujer : String @key
+	profesion : String @key
+end
+
+declare Alergica
+	mujer : String @key
+	cosa : String @key
+end
+
+declare Relacionado
+	cosa1 : String @key
+	cosa2 : String @key
+end
+
+declare SoloEscucha
+	mujer : String @key
+	musica : String @key
+end
+
+declare Incompatible
+	cosa1 : String @key
+	cosa2 : String @key
+end
+
+rule "Cargado de datos"
+
+    when
+        //conditions
+    then
+        Mujer m = new Mujer("Clara");
+        insert(m);
+        m = new Mujer("Luisa");
+        insert(m);
+        m = new Mujer("Maria");
+        insert(m);
+        m = new Mujer("Nelida");
+        insert(m);
+        
+        Profesion p = new Profesion("disenadora");
+        insert(p);
+        p = new Profesion("florista");
+        insert(p);
+        p = new Profesion("jardinera");
+        insert(p);
+        p = new Profesion("directora");
+        insert(p);
+		insert(new NoEs("Clara", "florista"));
+		insert(new NoEs("Clara", "jardinera"));
+		insert(new NoEs("Luisa", "florista"));
+		insert(new NoEs("Luisa", "directora"));
+		insert(new NoEs("Maria", "directora"));
+		insert(new NoEs("Nelida", "jardinera"));
+		insert(new NoEs("Nelida", "disenadora"));
+		insert(new Alergica("Clara", "plantas"));
+		insert(new Relacionado("jardinera", "plantas"));
+		insert(new Relacionado("florista", "plantas"));	
+		insert(new SoloEscucha("Luisa", "rock"));
+		insert(new SoloEscucha("Maria", "rock"));	
+		insert(new Incompatible("directora", "rock"));
+end
+
+query noEsQ(String mujer, String profesion)
+	NoEs(mujer, profesion;) 
+	or (Alergica(mujer, x;)
+	    and Relacionado(cosa1  == profesion, cosa2 == x;))
+    or (SoloEscucha(mujer, x;)
+        and Incompatible(cosa1 == profesion, cosa2 == x;))
+	
+end
+
+function String  encuentraPro(String m1, String m2, String m3, String m4, String m, String pro1, String pro2, String pro3, String pro4){
+	if (m1.equals(m)) return pro1;
+	if (m2.equals(m)) return pro2;
+	if (m3.equals(m)) return pro3;
+	if (m4.equals(m)) return pro4;
+	return "";
+}
+
+
+query diferentes(a, b, c, d) 
+	eval(a != b && a != c && a != d && b != c && b != d && c != d)
+end
+
+rule "sol"
+	when 
+		Mujer(m1:nombre)
+		Mujer(m2:nombre)
+		Mujer(m3:nombre)
+		Mujer(m4:nombre)
+		Profesion(pr1:nombre)
+		Profesion(pr2:nombre)
+		Profesion(pr3:nombre)
+		Profesion(pr4:nombre)
+		//diferentes(m1,m2,m3,m4;)
+		eval(m1.compareTo(m2) < 0 && m2.compareTo(m3) < 0 && m3.compareTo(m4) <0)
+		proLuisa : String() from encuentraPro(m1,m2,m3,m4,"Luisa",pr1,pr2,pr3,pr4)
+		proNelida : String() from encuentraPro(m1,m2,m3,m4,"Nelida",pr1,pr2,pr3,pr4)
+		diferentes(pr1,pr2,pr3,pr4;)
+		eval(!proNelida.equals("florista") || !(proLuisa.equals("jardinera") || proLuisa.equals("disenadora")))
+		not (noEsQ(m1, pr1;))
+		not (noEsQ(m2, pr2;))
+		not (noEsQ(m3, pr3;))
+		not (noEsQ(m4, pr4;))
+	then
+		System.out.println("---------");
+		System.out.println(m1+ " es " + pr1);
+		System.out.println(m2+ " es " + pr2);
+		System.out.println(m3+ " es " + pr3);
+		System.out.println(m4+ " es " + pr4);
+end

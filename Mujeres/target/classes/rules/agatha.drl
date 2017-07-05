@@ -1,0 +1,101 @@
+//created on: 3/02/2017
+package com.sample
+
+//list any import classes here.
+declare Persona
+	nombre : String @key 
+	genero : char @key 
+end 
+declare Kid 
+	persona : Persona @key 
+end
+declare Hermanos
+	hermano1 : Persona @key 
+	hermano2 : Persona @key 
+end 
+declare Mayor 
+	persona1 : Persona @key 
+	persona2 : Persona @key 
+end 
+declare Alone 
+	persona : Persona @key 
+end 
+declare Juntos 
+	persona1 : Persona @key 
+	persona2 : Persona @key 
+end 
+declare Separados 
+	persona1 : Persona @key 
+	persona2 : Persona @key 
+end 
+
+//declare any global variables here
+
+
+rule "Cargar hechos"
+    when
+        //conditions
+    then
+        Persona per1 = new Persona ("Alicia", 'f'); 
+        insert (per1); 
+        Persona per2 = new Persona ("Hijo", 'm'); 
+        insert(per2); 
+        Persona per3=new Persona("Hija", 'f'); 
+        insert(per3); 
+        Persona per4=new Persona("Esposo", 'm'); 
+        insert(per4); 
+        Persona per5=new Persona("Hermano", 'm'); 
+        insert(per5);
+        
+        insert(new Separados(per1, per4)); 
+        insert(new Separados(per4, per1)); 
+        
+        insert(new Hermanos(per1, per5)); 
+        insert(new Hermanos(per5, per1)); 
+        insert(new Hermanos(per2, per3));
+        insert(new Hermanos(per3, per2)); 
+        
+        insert(new Mayor(per1, per2)); 
+        insert(new Mayor(per1, per3)); 
+        insert(new Mayor(per4, per2)); 
+        insert(new Mayor(per4, per3)); 
+        
+       	insert(new Kid(per2)); 
+       	insert(new Kid(per3)); 
+end
+
+rule "En el bar "
+    when
+        $per1 : Persona(genero == 'f')
+        $per2 : Persona(genero =='m')
+    then
+        insert(new Juntos($per1, $per2)); 
+        insert(new Juntos($per2, $per1)); 
+end
+
+rule "Sol" 
+	when 
+		$asesino : Persona()
+		$victima : Persona()
+		$solo : Persona()
+		$enbar1 : Persona()
+		$enbar2 : Persona()
+		not Mayor(persona1==$asesino,persona2== $victima)
+		not Separados(persona1 == $asesino, persona2==$victima)
+		eval($asesino != $victima)
+		Hermanos($victima == hermano1 && $asesino != hermano2)
+		eval($solo != $asesino && $solo != $victima)
+		Kid(persona == $solo)
+		eval($enbar1 != $asesino && $enbar1 != $victima && $enbar1 != $solo)
+		eval($enbar2 != $asesino && $enbar2 != $victima && $enbar2 != $solo) 
+		not Separados(persona1 == $enbar1, persona2 == $enbar2)
+		Juntos(persona1 == $enbar1, persona2 == $enbar2)
+		
+	then 
+		System.out.println("El asesino es: " + $asesino); 
+		System.out.println("La víctima es: " + $victima);
+		System.out.println("Estaba solo: " + $solo);
+		System.out.println("En el bar: " + $enbar1); 
+		System.out.println("En el bar: " + $enbar2);
+		System.out.println(); 
+end 

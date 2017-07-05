@@ -1,0 +1,95 @@
+//created on: 17/01/2017
+package Mujeres
+
+//list any import classes here.
+
+//declare any global variables here
+declare Mujer
+	nombre: String @key
+end
+
+declare Profesion
+	nombre: String @key
+end 
+
+declare Cuadrupleta
+	mujer1 : String @key 
+	trabajo1 : String @key
+	mujer2 : String @key 
+	trabajo2 : String @key 
+	mujer3 : String @key 
+	trabajo3 : String @key 
+	mujer4 : String @key 
+	trabajo4 : String @key 
+end 
+
+rule "Cargar datos"
+    when
+        //conditions
+    then
+        //actions
+        Mujer m = new Mujer("Clara"); 
+        insert(m);
+        m = new Mujer("Luisa"); 
+        insert(m);
+        m = new Mujer("Maria"); 
+        insert(m);
+        m = new Mujer("Nelida"); 
+        insert(m); 
+        
+        Profesion pr = new Profesion("Diseñadora"); 
+        insert(pr); 
+		pr = new Profesion("Florista");
+		insert(pr); 
+		pr = new Profesion("Jardinera");
+		insert(pr); 
+		pr = new Profesion("Directora_de_orquesta"); 
+		insert(pr);
+end
+
+rule "Espacio de soluciones"
+    //include attributes such as "salience" here...
+    when
+        //conditions
+        $m1 : Mujer(nombre=="Clara")
+        $m2 : Mujer(nombre=="Luisa")
+        $m3 : Mujer(nombre=="Maria")
+        $m4 : Mujer(nombre=="Nelida")
+        
+        $pr1 : Profesion(nombre!="Florista" && nombre!="Jardinera")
+        $pr2 : Profesion(nombre!="Florista" && nombre!="Directora_de_orquesta")
+        $pr3 : Profesion(nombre=="Directora_de_orquesta")
+        $pr4 : Profesion(nombre!="Directora_de_orquesta" && nombre!="Jardinera")
+        
+        eval($pr1!=$pr2 && $pr1!=$pr3 && $pr1!=$pr4
+        	 && $pr2!=$pr3 && $pr2!=$pr4 && $pr3!=$pr4);
+        
+    then
+        //actions
+        
+       insert(new Cuadrupleta($m1.getNombre(),$pr1.getNombre(),
+        						$m2.getNombre(),$pr2.getNombre(),
+        						$m3.getNombre(),$pr3.getNombre(), 
+        						$m4.getNombre(),$pr4.getNombre()));
+end
+
+ rule "solucion"
+ 	when 
+ 		$c : Cuadrupleta()
+ 	then 
+ 		System.out.println($c);
+ end 
+
+function boolean valido(String pr4, String pr2){
+	if(pr4.equals("Florista")){
+		if(pr2.equals("Diseñadora")){
+			return false;
+		}
+		if(pr2.equals("Jardinera")){
+			return false;
+		}
+	}
+	return true; 
+}
+ 	
+

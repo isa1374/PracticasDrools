@@ -1,0 +1,55 @@
+//created on: 26/01/2017
+//Isabel García Pérez A01331405 
+//Lenguajes de Programación  
+package com.sample
+
+declare President
+	name : String @key
+	beginY : int @key
+	endY : int @key
+end
+
+declare Year
+	year : int @key
+end
+
+rule "Load initial facts"
+
+    when
+        //conditions
+    then
+        insert(new President("Ortiz Rubio", 1930, 1932));
+        insert(new President("Rodriguez", 1932, 1934));
+        insert(new President("Cardenas", 1934, 1940));
+        insert(new President("Avila Camacho", 1940, 1946));
+        insert(new President("Aleman", 1946, 1952));
+        insert(new President("Ruiz Cortines", 1952, 1958));
+        insert(new President("Lopez Mateos", 1958, 1964));
+        insert(new President("Diaz Ordaz", 1964, 1970));
+        insert(new President("Echeverria", 1970, 1976));
+        insert(new President("Portillo", 1976, 1982));
+        insert(new President("Madrid", 1982, 1988));
+        insert(new President("Salinas", 1988, 1994));
+        insert(new President("Zedillo", 1994, 2000));
+        insert(new President("Fox", 2000, 2006));
+        insert(new President("Calderon", 2006, 2012));
+        insert(new President("Nieto", 2012, 2018));
+        
+        insert(new Year(1930));
+        insert(new Year(1988));
+end
+
+query BuscarPresidente(int year, String $nombre)
+	President(beginY<=year, endY>=year, name == $nombre) 
+end
+
+rule "Check"
+	when 
+		$y : Year()
+		?BuscarPresidente($y.getYear(), name;)
+	then 
+		System.out.println("Año: " + $y.getYear() + " Presidente: " + name);
+end 
+
+
+

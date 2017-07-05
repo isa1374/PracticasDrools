@@ -1,0 +1,122 @@
+//created on: 20/01/2017
+package com.sample
+
+declare Jarro
+	capacidad : int @key
+	tiene : int @key
+end
+
+declare Estado
+	jarro3 : Jarro @key
+	jarro4 : Jarro @key
+	estadoAnt : Estado @key
+	descripcion : String @key
+	paso : int @key
+end
+
+
+rule "Estado Inicial"
+
+    when
+        //conditions
+    then
+        Jarro jarro3 = new Jarro(3,0);
+        insert (jarro3);
+        Jarro jarro4 = new Jarro(4,0);
+        insert (jarro4);
+        Estado e = new Estado(jarro3, jarro4, null,"",0);
+        insert(e);
+
+end
+
+rule "Llenado del jarro 4"
+    //include attributes such as "salience" here...
+    when
+        $e : Estado(jarro4.tiene < jarro4.capacidad && paso <= 5)
+    then
+    	Jarro jarro3 = new Jarro(3, $e.getJarro3().getTiene());
+    	Jarro jarro4 = new Jarro(4, 4);
+        Estado e = new Estado(jarro3, jarro4, $e, "Llenado del jarro 4",$e.getPaso()+1);
+        insert(e);
+
+end
+
+rule "Llenado del jarro 3"
+    //include attributes such as "salience" here...
+    when
+        $e : Estado(jarro3.tiene < jarro3.capacidad && paso <= 5)
+    then
+    	Jarro jarro3 = new Jarro(3, 3);
+    	Jarro jarro4 = new Jarro(4, $e.getJarro4().getTiene());
+        Estado e = new Estado(jarro3, jarro4, $e, "Llenado del jarro 3",$e.getPaso()+1);
+        insert(e);
+
+end
+
+rule "vaciado del jarro 3"
+    //include attributes such as "salience" here...
+    when
+        $e : Estado(jarro3.tiene != 0 && paso <= 5)
+    then
+    	Jarro jarro3 = new Jarro(3, 0);
+    	Jarro jarro4 = new Jarro(4, $e.getJarro4().getTiene());
+        Estado e = new Estado(jarro3, jarro4, $e, "vaciado del jarro 3",$e.getPaso()+1);
+        insert(e);
+
+end
+
+rule "vaciado del jarro 4"
+    //include attributes such as "salience" here...
+    when
+        $e : Estado(jarro4.tiene != 0 && paso <= 5)
+    then
+    	Jarro jarro3 = new Jarro(3, $e.getJarro3().getTiene());
+    	Jarro jarro4 = new Jarro(4, 0);
+        Estado e = new Estado(jarro3, jarro4, $e, "vaciado del jarro 4",$e.getPaso()+1);
+        insert(e);
+
+end
+
+rule "paso del jarro3 al jarro4"
+    //include attributes such as "salience" here...
+    when
+        $e : Estado(jarro3.tiene != 0 && jarro4.tiene != 4 && paso <= 5)
+    then
+    	int delta = Math.min($e.getJarro3().getTiene(), $e.getJarro4().getCapacidad() - $e.getJarro4().getTiene());
+    	Jarro jarro3 = new Jarro(3, $e.getJarro3().getTiene() - delta);
+    	Jarro jarro4 = new Jarro(4, $e.getJarro4().getTiene() + delta);
+        Estado e = new Estado(jarro3, jarro4, $e, "Paso "+delta+" litros del 3 al 4",$e.getPaso()+1);
+        insert(e);
+
+end
+
+rule "paso del jarro4 al jarro3"
+    //include attributes such as "salience" here...
+    when
+        $e : Estado(jarro4.tiene != 0 && jarro3.tiene != 3 && paso <= 5)
+    then
+    	int delta = Math.min($e.getJarro4().getTiene(), $e.getJarro3().getCapacidad() - $e.getJarro3().getTiene());
+    	Jarro jarro3 = new Jarro(3, $e.getJarro3().getTiene() + delta);
+    	Jarro jarro4 = new Jarro(4, $e.getJarro4().getTiene() - delta);
+        Estado e = new Estado(jarro3, jarro4, $e, "Paso "+delta+" litros del 4 al 3",$e.getPaso()+1);
+        insert(e);
+
+end
+
+
+
+rule "imprime estados"
+
+	when
+		$e : Estado()
+	then
+		System.out.println($e);
+end
+
+rule "solucion"
+
+	when
+		$e : Estado(jarro4.tiene == 2)
+	then
+		System.out.println("solucion ziiii");
+end

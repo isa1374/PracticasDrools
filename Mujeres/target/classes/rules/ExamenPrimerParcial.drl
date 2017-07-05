@@ -1,0 +1,123 @@
+package com.sample;
+
+declare Profesor
+    nombre : String @key
+end
+
+declare Asignatura
+    nombre : String @key
+end
+
+declare Dia
+    dia : String @key
+end
+
+declare Ensena
+    maestro : Profesor @key
+    materia : Asignatura @key
+    dia : Dia @key
+end
+
+declare Horario
+    materia1 : Asignatura @key
+    materia2 : Asignatura @key
+end
+
+declare Dia_Prof
+    dia: Dia @key
+    prof: Profesor @key
+end
+
+declare Prof_Mat
+    profesor: Profesor @key
+    materia: Asignatura @key
+end
+
+declare Mate_Dia
+    dia: Dia @key
+    mat: Asignatura @key
+end
+
+declare Orden
+    dia1: Dia @key
+    dia2: Dia @key
+    dia3: Dia @key
+end
+
+rule "Hechos"
+    when
+    then
+        Profesor p1=new Profesor("Maria");
+        Profesor p2=new Profesor("Jesus");
+        Profesor p3=new Profesor("Faron");
+
+        insert(p1);
+        insert(p2);
+        insert(p3);
+
+        Asignatura a1=new Asignatura("Logica");
+        Asignatura a2=new Asignatura("Programacion");
+        Asignatura a3=new Asignatura("Matematicas");
+
+        insert(a1);
+        insert(a2);
+        insert(a3);
+
+        Dia d1=new Dia("Lunes");
+        Dia d2=new Dia("Miercoles");
+        Dia d3=new Dia("Jueves");
+
+        insert(d1);
+        insert(d2);
+        insert(d3);
+
+        insert(new Orden(d1,d2,d3));
+
+        insert(new Horario(a1,a2));
+        insert(new Prof_Mat(p1,a2));
+        insert(new Prof_Mat(p3,a1));
+end
+
+rule "Deduce Faron"
+    when
+        $n: Profesor(nombre=="Faron")
+        $p1: Prof_Mat(profesor==$n)
+        $d: Dia(dia=="Lunes")
+        $dia: Orden(dia1==$d);
+    then
+        insert(new Ensena($p1.getProfesor(),$p1.getMateria(),$dia.getDia2()));
+end
+
+rule "Deduce Maria"
+    when
+        $n: Profesor(nombre=="Maria")
+        $p1: Prof_Mat(profesor==$n)
+        $n1: Profesor(nombre=="Faron")
+        $e1: Ensena(maestro==$n1)
+        $dia: Orden(dia1==$e1.getDia())
+    then
+        insert(new Ensena($p1.getProfesor(),$p1.getMateria(),$dia.getDia1()));
+end
+
+rule "Deduce Jesus"
+    when
+        $j: Profesor(nombre=="Jesus")
+        $n1: Profesor(nombre=="Maria")
+        $n2: Profesor(nombre=="Faron")
+        $e1 : Ensena(maestro==$n1)
+        $e2 : Ensena(maestro==$n2)
+        $a  : Asignatura(nombre!=$e1.getMateria() && nombre!=$e2.getMateria())
+        $d  : Dia(dia!=$e1.getDia() && dia!=$e2.getDia())
+    then
+        insert(new Ensena($j,$a,$d));
+end
+
+rule "Resultados"
+	when
+		$en : Ensena()
+	then
+		System.out.println("Profesor: " + $en.getMaestro());
+		System.out.println("Materia: " + $en. getMateria());
+		System.out.println("Dia: " + $en.getDia());
+		System.out.println();
+end
